@@ -132,7 +132,7 @@ while True:
                 "topic":"None"
             })
             # print("=>",ans)
-            res = writeInDB(elastic_client,ele['id'], ans,db)
+            # res = writeInDB(elastic_client,ele['id'], ans,db)
 
     print("*"*40)
     print(time.time()-start)
