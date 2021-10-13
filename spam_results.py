@@ -134,7 +134,13 @@ while True:
         text = ele['content']
         ans = spam_results(text)
         ans = ans['weights']
-        print('->',ans)
+        ans = [
+            {
+                "word" : "money",
+                "score" : 0.233445435,
+            }
+        ]
+        print('->',[])
         res = writeInDB(elastic_client , ele['id'],ans, db)
         res = write_data_in_db(ele['id'], ans, db)
 
