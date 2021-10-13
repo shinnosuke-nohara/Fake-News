@@ -106,6 +106,21 @@ def writeInDB(elastic_client , doc_id , doc , db):
 
     return response
 
+def write_data_in_db(id,result, db):
+    host = 'http://15.207.24.247:9200/'+db+'/_update/'+str(id)
+    headers = {
+        'Content-Type': 'application/json',
+    }
+    post_body = {
+        "doc" : {
+        "sentiment" : result
+    },
+    "detect_noop": False
+    }
+
+    post_body = json.dumps(post_body)
+    response = requests.post(url=host,headers=headers,data=post_body)
+    return response
 
 while True:
     elastic_client = Elasticsearch([{'host': '15.207.24.247', 'port': 9200}])
@@ -118,22 +133,13 @@ while True:
     for ele in tqdm(data):
         text = ele['content']
         ans = spam_results(text)
-        if(ans):
-            print('->',ans)
-            # res = writeInDB(elastic_client , ele['id'],ans, db)
-            # print(res)
-            cnt=cnt+1
-        else:
-            ans = []
-            ans.append({
-                "sentiment":"None",
-                "score":0,
-                "name":"None",
-                "topic":"None"
-            })
-            # print("=>",ans)
-            # res = writeInDB(elastic_client,ele['id'], ans,db)
-
+        
+        print('->',ans)
+        # res = writeInDB(elastic_client , ele['id'],ans, db)
+        res = write_data_in_db(ele['id'], ans, db)
+        print(res)
+        cnt=cnt+1
+    
     print("*"*40)
     print(time.time()-start)
     print(cnt)
