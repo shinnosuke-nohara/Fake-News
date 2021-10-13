@@ -5,6 +5,13 @@ from lime.lime_text import LimeTextExplainer
 from sklearn.pipeline import make_pipeline
 import joblib
 #from sklearn.ensemble import RandomForestClassifier
+import json
+import requests
+from tqdm import tqdm
+import time
+from datetime import datetime
+from elasticsearch import Elasticsearch
+from random import choice
 
 
 def spam_results(content = None, num_features = 10):
@@ -45,3 +52,89 @@ def spam_results(content = None, num_features = 10):
     return results
 
 
+def get_data_from_db(db):
+    host = 'http://15.207.24.247:9200/' + db +'/_search'
+    json_body = '''{
+        "query": {
+                "bool": {
+                    "must_not": {
+                        "exists":{
+                            "field":"fake_news"
+                            }
+                        }
+                    }
+                }
+    }'''
+    headers = {
+        'Content-Type': 'application/json',
+    }
+    params = {
+        'size':100
+    }
+    resp = requests.get(host,params=params, headers=headers, data=json_body)
+    resp_text = json.loads(resp.text)
+    document_list = []
+
+    for data in resp_text['hits']['hits']:
+        try:
+                content_list = {}
+                content_list['id'] = data['_id']
+                content_list['content'] = data['_source']['Content']
+                document_list.append(content_list)
+        except Exception as err:
+                print(err)
+
+    return document_list
+
+def writeInDB(elastic_client , doc_id , doc , db):
+    source_to_update = { "doc" : { "fake_news" : doc } }
+    response = elastic_client.update(
+        index=db,
+        doc_type="_doc",
+        id=doc_id,
+        body=source_to_update
+        )
+    print(datetime.now().strftime("%d/%m/%Y %H:%M:%S"),response['result'])
+    if response['result'] == "updated":
+        pass
+        # print ("result:", response['result'])
+        # print ("Update was a success for ID:", response['_id'])
+        # print ("New data:", source_to_update)
+    else:
+        print ("result:", response['result'])
+        print ("Response failed:", response['_shards']['failed'])
+
+    return response
+
+
+while True:
+    elastic_client = Elasticsearch([{'host': '15.207.24.247', 'port': 9200}])
+    db = choice(['news_list','news_data'])
+    data = get_data_from_db(db)
+    # print(data)
+
+    cnt = 0
+    start = time.time()
+    for ele in tqdm(data):
+        text = ele['content']
+        ans = spam_results(text)
+        if(ans):
+            print('->',ans)
+            # res = writeInDB(elastic_client , ele['id'],ans, db)
+            # print(res)
+            cnt=cnt+1
+        else:
+            ans = []
+            ans.append({
+                "sentiment":"None",
+                "score":0,
+                "name":"None",
+                "topic":"None"
+            })
+            # print("=>",ans)
+            res = writeInDB(elastic_client,ele['id'], ans,db)
+
+    print("*"*40)
+    print(time.time()-start)
+    print(cnt)
+    print("*"*40)
