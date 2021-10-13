@@ -59,7 +59,7 @@ def get_data_from_db(db):
                 "bool": {
                     "must_not": {
                         "exists":{
-                            "field":"fake_news"
+                            "field":"fake_news1"
                             }
                         }
                     }
@@ -87,7 +87,7 @@ def get_data_from_db(db):
     return document_list
 
 def writeInDB(elastic_client , doc_id , doc , db):
-    source_to_update = { "doc" : { "fake_news" : doc } }
+    source_to_update = { "doc" : { "fake_news2" : doc } }
     response = elastic_client.update(
         index=db,
         doc_type="_doc",
@@ -113,7 +113,7 @@ def write_data_in_db(id,result, db):
     }
     post_body = {
         "doc" : {
-        "sentiment" : result
+        "fake_news1" : result
     },
     "detect_noop": False
     }
@@ -133,13 +133,15 @@ while True:
     for ele in tqdm(data):
         text = ele['content']
         ans = spam_results(text)
-        
+        ans = ans['weights']
         print('->',ans)
-        # res = writeInDB(elastic_client , ele['id'],ans, db)
+        res = writeInDB(elastic_client , ele['id'],ans, db)
         res = write_data_in_db(ele['id'], ans, db)
+
         print(res)
         cnt=cnt+1
-    
+        break
+
     print("*"*40)
     print(time.time()-start)
     print(cnt)
