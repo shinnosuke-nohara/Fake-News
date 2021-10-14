@@ -143,15 +143,9 @@ while True:
     for ele in tqdm(data):
         text = ele['content']
         ans = spam_results(text)
-
-        print('->', ans)
-
         res = writeInDB(elastic_client, ele['id'], ans, db)
-        # res = write_data_in_db(ele['id'], ans, db)
-
-       # print(res)
+        print(res)
         cnt = cnt+1
-       # break
 
     print("*"*40)
     print(time.time()-start)
