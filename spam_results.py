@@ -66,7 +66,7 @@ def get_data_from_db(db):
                 "bool": {
                     "must_not": {
                         "exists":{
-                            "field":"fake_news1"
+                            "field":"fake_news"
                             }
                         }
                     }
@@ -95,7 +95,7 @@ def get_data_from_db(db):
 
 
 def writeInDB(elastic_client, doc_id, doc, db):
-    source_to_update = {"doc": {"fake_news2": doc}}
+    source_to_update = {"doc": {"fake_news": doc}}
     response = elastic_client.update(
         index=db,
         doc_type="_doc",
@@ -122,7 +122,7 @@ def write_data_in_db(id, result, db):
     }
     post_body = {
         "doc": {
-            "fake_news1": result
+            "fake_news": result
         },
         "detect_noop": False
     }
@@ -146,7 +146,7 @@ while True:
 
         print('->', ans)
 
-        # res = writeInDB(elastic_client , ele['id'],ans, db)
+        res = writeInDB(elastic_client, ele['id'], ans, db)
         # res = write_data_in_db(ele['id'], ans, db)
 
        # print(res)
