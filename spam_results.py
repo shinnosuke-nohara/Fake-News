@@ -13,7 +13,6 @@ from datetime import datetime
 from elasticsearch import Elasticsearch
 from random import choice
 
-
 def spam_results(content = None, num_features = 10):
     """
     content: string
@@ -39,17 +38,26 @@ def spam_results(content = None, num_features = 10):
     
     probability = pipeline.predict_proba([content])
     
+    weights = exp.as_list()
+    weights_list = []
+    
+    for weight in weights:
+        weights_list.append({"word":weight[0], "score": weight[1]})
+        
+        
+        
     results = {}
     
-    results['weights'] = exp.as_list()
+    results['weights'] = weights_list
     
-    results['probability'] = probability
+    results['probability'] = [probability[0][0],probability[0][1]]
     
     if probability[0][0] > probability[0][1]:
         results['predicted_class'] = '0'
     else:
         results['predicted_class'] = '1'
     return results
+
 
 
 def get_data_from_db(db):
@@ -121,6 +129,7 @@ def write_data_in_db(id,result, db):
     post_body = json.dumps(post_body)
     response = requests.post(url=host,headers=headers,data=post_body)
     return response
+
 
 while True:
     elastic_client = Elasticsearch([{'host': '15.207.24.247', 'port': 9200}])
